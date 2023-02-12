@@ -1,12 +1,21 @@
 close all;
 clear all;
 clc;
-load('TrainSet.mat')
+%% For Emo-DB dataset
+load('EmoDB_MAT_Files/TrainSet.mat')
 TrainSet = double(TrainSet);
-load('TestSet.mat')
+load('EmoDB_MAT_Files/TestSet.mat')
 TestSet = double(TestSet);
+
+%% For AESSD dataset
+% load('AESSD_MAT_Files/TrainSetaessd.mat')
+% TrainSet = double(TrainSet);
+% load('AESSD_MAT_Files/TestSetaessd.mat')
+% TestSet = double(TestSet); 
+
 X_train = TrainSet(:,1:27); Y_train = TrainSet(:, 28);
 X_test = TestSet(:,1:27); Y_test = TestSet(:, 28);
+
 Classes = [];
 %% For Emo-DB dataset
 for i=1:length(Y_train)
@@ -27,7 +36,7 @@ for i=1:length(Y_train)
     end
 end
 
-% %% For AESSD dataset
+%% For AESSD dataset
 % for i=1:length(Y_train)
 %     if Y_train(i) == 1
 %         Classes = [Classes; 1 0 0 0 0];
@@ -62,7 +71,7 @@ for i=1:length(Y_test)
     end
 end
 
-% %% For AESSD dataset
+%% For AESSD dataset
 % for i=1:length(Y_test)
 %     if Y_test(i) == 1
 %         YClasses = [YClasses; 1 0 0 0 0];
@@ -77,6 +86,7 @@ end
 %     end
 % end
 
+%% Network design and training
 net = patternnet([32, 64, 64, 32, 16], 'trainscg', 'crossentropy');
 
 net = configure(net, X_train', Classes');
@@ -99,6 +109,7 @@ plotconfusion(YClasses',y);
 figure(2);
 plotroc(YClasses',y);
 
+%% SHAP analysis
 X_sample = X_train(1:5000,:);
 queryPoint = X_sample(1,:);
 blackbox = @(X_sample)predict(net,X_sample);
@@ -106,3 +117,5 @@ explainer = shapley(blackbox,X_sample,'CategoricalPredictors',[7]); %% replace 7
 explainer = fit(explainer,queryPoint, 'UseParallel', true);
 figure(3);
 plot(explainer);
+
+%% end
